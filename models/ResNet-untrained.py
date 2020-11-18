@@ -17,7 +17,6 @@ face_mask_dataset = loadDataset(dataset_directory)
 train_set, val_set, test_set = splitGroups(face_mask_dataset, train_split, val_split, test_split)
 
 labels = np.array(np.concatenate([y for x, y in test_set], axis=0))
-print(labels)
 
 IMG_HEIGHT = 64
 IMG_WIDTH = 64
@@ -48,7 +47,7 @@ with strategy.scope():
     x = tf.keras.applications.resnet.preprocess_input(x)  # ResNet50 input preprocessing
     x = base_model(x, training=True)
     x = keras.layers.GlobalAveragePooling2D()(x)
-    x = keras.layers.Dropout(0.2)(x)
+    x = keras.layers.Dropout(0.5)(x)
     x = keras.layers.Dense(3)(x)
     outputs = keras.layers.Activation('softmax')(x)
 
@@ -62,14 +61,15 @@ with strategy.scope():
     )
 
 f = open("untrained-output.txt", "a")
-f.write("BEFORE TRAINING EVALUATION")
-f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)))
-f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())))
+f.write("BEFORE TRAINING EVALUATION\n")
+f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)) + "\n")
+f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())) + "\n")
 
-epochs = 20
-model.fit(train_set, epochs=epochs, validation_data=val_set)
+with strategy.scope():
+    epochs = 30
+    model.fit(train_set, epochs=epochs, validation_data=val_set)
 
 f = open("untrained-output.txt", "a")
-f.write("AFTER TRAINING EVALUATION")
-f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)))
-f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())))
+f.write("AFTER TRAINING EVALUATION\n")
+f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)) + "\n")
+f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())) + "\n")

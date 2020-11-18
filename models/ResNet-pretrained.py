@@ -17,7 +17,6 @@ face_mask_dataset = loadDataset(dataset_directory)
 train_set, val_set, test_set = splitGroups(face_mask_dataset, train_split, val_split, test_split)
 
 labels = np.array(np.concatenate([y for x, y in test_set], axis=0))
-print(labels)
 
 IMG_HEIGHT = 64
 IMG_WIDTH = 64
@@ -63,17 +62,18 @@ with strategy.scope():
     )
 
 f = open("pretrained-output.txt", "a")
-f.write("BEFORE TRAINING EVALUATION")
-f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)))
-f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())))
+f.write("BEFORE TRAINING EVALUATION\n")
+f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)) + "\n")
+f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())) + "\n")
 
-epochs = 40
-model.fit(train_set, epochs=epochs, validation_data=val_set)
+with strategy.scope():
+    epochs = 20
+    model.fit(train_set, epochs=epochs, validation_data=val_set)
 
 f = open("pretrained-output.txt", "a")
-f.write("AFTER FINE TUNING EVALUATION")
-f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)))
-f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())))
+f.write("AFTER FINE TUNING EVALUATION\n")
+f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)) + "\n")
+f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())) + "\n")
 
 with strategy.scope():
     # fine tune over the whole model
@@ -84,10 +84,10 @@ with strategy.scope():
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
     )
     
-epochs = 20
-model.fit(train_set, epochs=epochs, validation_data=val_set)
+    epochs = 10
+    model.fit(train_set, epochs=epochs, validation_data=val_set)
 
 f = open("pretrained-output.txt", "a")
-f.write("AFTER TRAINING EVALUATION")
-f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)))
-f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())))
+f.write("AFTER TRAINING EVALUATION\n")
+f.write("MODEL EVALUATION (loss, metrics): " + str(model.evaluate(test_set)) + "\n")
+f.write("BALANCED ACCURACY: " + str(metrics.balanced_accuracy_score(labels, tf.argmax(input=model.predict(test_set), axis=1).numpy())) + "\n")
